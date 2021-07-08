@@ -148,3 +148,16 @@
     state: "{{ wireguard_service_state }}"
     enabled: "{{ wireguard_service_enabled }}"
   when: not ansible_os_family == 'Darwin'
+
+- name: Generate WireGuard configuration file for non-managed peers
+  loop: "{{ wireguard_unmanaged_peers | dict2items }}"
+  delegate_to: localhost
+  connection: local
+  become: no
+  run_once: true
+  template:
+    src: etc/wireguard/wg.conf.local.j2
+    dest: "{{ lookup('env', 'PWD') }}/{{ wireguard_interface }}_{{ item.key }}.conf"
+    mode: "{{ wireguard_conf_mode }}"
+  tags:
+    - wg-config
